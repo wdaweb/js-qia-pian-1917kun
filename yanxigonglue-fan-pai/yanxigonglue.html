@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./animate.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        #bg {
+            width: 100vw;
+            height: 100vh;
+            background-image: url(./素材/bg.stest.jpg);
+            background-repeat: no-repeat;
+            background-position: fixed;
+            background-size: cover;
+            position: relative;
+            opacity: 90%;
+
+        }
+
+        #game {
+            width: 1080px;
+            margin: auto;
+            position: absolute;
+            top: 3%;
+            left: 22%;
+            transform: translate(-50px, -50px);
+
+        }
+
+        #btn {
+            position: absolute;
+            top: 55%;
+            left: 6.3%;
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 10%;
+            /* box-shadow: 1px 1px 3px #ff3c00; */
+            background-color: transparent;
+            background-repeat: no-repeat;
+            cursor: pointer;
+            filter: drop-shadow(0px 0px 4px #aaa);
+            /* background-image: url(./素材/button.jpg) */
+        }
+
+        .card {
+            /* width: 512px;
+            height: 288px; */
+            width: 300px;
+            height: 200px;
+            transform-style: preserve-3d;
+            position: relative;
+            transform: rotateX(0deg);
+            transition: transform .5s;
+            float: left;
+            margin: 20px;
+            display: none;
+            pointer-events: none;
+        }
+
+        .front {
+            width: 100%;
+            height: 100%;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            position: absolute;
+            transform: rotateX(180deg);
+
+        }
+
+        .back {
+            width: 100%;
+            height: 100%;
+            background-image: url(./素材/back.jpg);
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            position: absolute;
+            transform: rotateX(0deg);
+        }
+
+        .open {
+            transform: rotateX(180deg);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="bg">
+        <div id="game"></div>
+        <input type="button" value="" style="width: 55px;height: 56px;background-image: url('./素材/button.png');"
+            id="btn">
+    </div>
+    <script src="jquery-3.5.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+    <script>
+        $(function () {
+            const rand = Math.floor(Math.random() * 3)
+            const music = new Audio()
+
+
+
+
+
+            music.src = (`./素材/1.mp3`)
+            music.load();
+
+
+
+            // 產生九張卡片(目前沒有front的圖片)
+            for (let i = 0; i < 9; i++) {
+                $("#game").append(`<div class="card">
+                <div class="front"></div>
+                <div class="back"></div>
+                </div>`)
+            }
+
+            // 將牌放入card中
+            for (let i = 0; i < $(".card").length; i++) {
+                let num = i % $(".card").length + 1;
+                $(".card").eq(i).find(".front").css("background-image", `url(./素材/${num}.jpg)`)
+                // 測試用來偷看
+                $(".card").eq(i).attr("data-card", num);
+            }
+
+            // 洗牌
+            for (let i = 0; i < 9; i++) {
+                let target = Math.floor(Math.random() * $(".card").length);
+                let rand = Math.floor(Math.random() * $(".card").length);
+                $(".card").eq(target).insertAfter($(".card").eq(rand));
+            }
+
+            //點擊start 
+            // 翻過來給看 過時間翻回去 
+            $("#btn").click(function () {
+                // 按鈕不給按 
+                $(this).attr("disabled", true);
+
+
+                $(".card").css("display", "block");
+
+                $(".card").addClass("open");
+                Swal.fire({
+                    title: '請先欣賞一下',
+                    width: 270,
+                    height: 280,
+                    padding: '3.5em',
+                    background: '#fff url(/../素材/羞赧一笑.gif)',
+                    backdrop: `rgba(0,0,0,0.5) url()
+                    left top
+                    no-repeat`
+                })
+                setTimeout(() => {
+                    $(".card").removeClass("open");
+                    // $(".front").css("transform", "rotateX(0deg)")
+                    // 跳通知
+                    Swal.fire({
+                        icon: "info",
+                        title: "接下來請聽音樂選合適的卡片",
+                        showClass: {
+                            popup: 'animated fadeInDown faster'
+                        },
+                        hideClass: {
+                            popup: 'animated fadeOutUp faster'
+                        }
+                    })
+                    Swal.fire({
+                        icon: "info",
+                        title: "慢慢欣賞請別點太快",
+                        showClass: {
+                            popup: 'animated fadeInDown faster'
+                        },
+                        hideClass: {
+                            popup: 'animated fadeOutUp faster'
+                        }
+                    })
+                    music.play();
+                    $(".card").css("pointer-events", "auto")
+                }, 5000)
+
+
+                let num = 1;
+                // 點擊翻牌(如果翻到該段音樂,卡牌停一秒消失,播下一段音樂)
+                $(".card").on("click", function () {
+                    // 如果沒被翻過來就翻過來
+                    if (!$(this).hasClass("open")) {
+                        $(this).addClass("open")
+                    }
+
+                    // 如果被翻過來是該段歌詞則音樂停止
+
+                    if ($(this).find(".front").css("background-image").substr(-7, 1) == music.src.substr(-5, 1)) {
+
+                        music.pause();
+                        setTimeout(() => {
+                            alert("答對了請繼續")
+                        }, 300)
+                        setTimeout(() => {
+                            music.src = (`./素材/${num}.mp3`)
+                            music.play();
+                        }, 1)
+                        num++;
+                        if (num == 10) {
+                            setTimeout(() => {
+                                Swal.fire({
+                                    title: '究竟你/妳打了爾晴多少次耳光',
+                                    width: 470,
+                                    height: 300,
+                                    padding: '3.8em',
+                                    background: '#fff url()',
+                                    backdrop: `rgba(0,0,0,0.5) url()
+                                    left top
+                                    no-repeat`
+                                })
+                            }, 2000)
+                            setTimeout(() => {
+                                Swal.fire({
+                                    title: '結束了 拜拜',
+                                    width: 270,
+                                    height: 280,
+                                    padding: '3.5em',
+                                    background: '#fff url(/../素材/沒有靈魂的拜拜.gif)',
+                                    backdrop: `rgba(0,0,0,0.5) url()
+                                    left top
+                                    no-repeat`
+                                })
+                            }, 5000)
+                        }
+                    }
+
+                    // 如果被翻過來不是該段歌詞則翻回去
+                    if ($(this).find(".front").css("background-image").substr(-7, 1) !== music.src.substr(-5, 1)) {
+
+                        Swal.fire({
+                            title: '答錯了',
+                            width: 470,
+                            height: 300,
+                            padding: '3.8em',
+                            background: '#fff url(/../素材/給老子死.gif)',
+                            backdrop: `rgba(0,0,0,0.5) url()
+                                    left top
+                                    no-repeat`
+                        })
+                        setTimeout(() => {
+                            $(this).removeClass("open")
+                        }, 1000)
+                    }
+                })
+            })
+
+
+
+
+
+        })
+
+
+
+    </script>
+</body>
+
+</html>
